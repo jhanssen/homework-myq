@@ -51,7 +51,7 @@ const devices = {
 
         Console.log("created myq", dev.TypeName, hwdev.name);
 
-        this._homework.addDevice(hwdev);
+        hw.addDevice(hwdev);
     }
 };
 

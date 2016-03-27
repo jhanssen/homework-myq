@@ -112,7 +112,7 @@ const devices = {
     }
 };
 
-const caseta = {
+const hwmyq = {
     get name() { return "myq"; },
     get homework() { return this._homework; },
     get ready() { return this._ready; },
@@ -162,4 +162,4 @@ const caseta = {
     }
 };
 
-module.exports = caseta;
+module.exports = hwmyq;

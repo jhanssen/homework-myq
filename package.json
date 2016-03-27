@@ -5,6 +5,9 @@
     "hw-server": ">=1.0.0",
     "node": ">4.0.0"
   },
+  "scripts": {
+    "postinstall": "patch -p1 < myqnode.patch"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jhanssen/homework-myq"

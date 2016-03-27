@@ -1,0 +1,19 @@
+{
+  "name": "hw-myq",
+  "version": "1.0.0",
+  "engines": {
+    "hw-server": ">=1.0.0",
+    "node": ">4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jhanssen/homework-myq"
+  },
+  "license": "BSD-2-Clause",
+  "keywords": [
+    "homework-plugin"
+  ],
+  "dependencies": {
+    "myqnode": "0.0.1"
+  }
+}

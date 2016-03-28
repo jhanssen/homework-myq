@@ -145,7 +145,7 @@ const hwmyq = {
                     }
                 }
 
-                defaultGarageDoorInterval = Config.pollInterval || 1000 * 60 * 10;
+                defaultGarageDoorInterval = Config.pollInterval || (1000 * 60 * 10);
                 garageDoorInterval = defaultGarageDoorInterval;
                 garageDoorTimer = setTimeout(pollGarageDoors, garageDoorInterval);
 

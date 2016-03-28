@@ -134,8 +134,12 @@ const hwmyq = {
                     for (var i = 0; i < resp.Devices.length; ++i) {
                         let dev = resp.Devices[i];
                         if (typeof dev === "object") {
-                            if (typeof dev.MyQDeviceTypeName === "string" && dev.MyQDeviceTypeName in devices) {
-                                devices[dev.MyQDeviceTypeName](dev, this._homework);
+                            if (typeof dev.MyQDeviceTypeName === "string") {
+                                if (dev.MyQDeviceTypeName in devices) {
+                                    devices[dev.MyQDeviceTypeName](dev, this._homework);
+                                } else if (dev.MyQDeviceTypeName != "Gateway") {
+                                    Console.error("unknown myq device", JSON.stringify(dev, 0, 4));
+                                }
                             }
                         }
                     }

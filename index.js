@@ -149,6 +149,8 @@ const hwmyq = {
                 garageDoorInterval = defaultGarageDoorInterval;
                 garageDoorTimer = setTimeout(pollGarageDoors, garageDoorInterval);
 
+                Console.log("default poll interval", defaultGarageDoorInterval);
+
                 // and poll once right now to update our values
                 pollGarageDoors(false);
 

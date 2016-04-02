@@ -17,6 +17,6 @@
     "homework-plugin"
   ],
   "dependencies": {
-    "myqnode": "0.0.1"
+    "@jhanssen/myqnode": "~0.0.2"
   }
 }

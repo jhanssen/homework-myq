@@ -2,7 +2,7 @@
 
 "use strict";
 
-const myQ = require("myqnode").myQ;
+const myQ = require("@jhanssen/myqnode").myQ;
 var Console = undefined;
 var Config = undefined;
 

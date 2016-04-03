@@ -1,4 +1,4 @@
-/*global require,module,setTimeout,clearTimeout*/
+/*global require,module,setTimeout,clearTimeout,setInterval*/
 
 "use strict";
 
@@ -7,8 +7,9 @@ var Console = undefined;
 var Config = undefined;
 
 const garageDoors = Object.create(null);
+const lights = Object.create(null);
 
-var defaultGarageDoorInterval = undefined;
+var defaultPollInterval = undefined;
 var garageDoorInterval = undefined;
 var garageDoorTimer = undefined;
 var garageDoorFastPoll = false;
@@ -19,7 +20,7 @@ function pollGarageDoors(restart)
         // get the status of this door
         myQ.getDoorStatus(Config.userid, Config.password, id)
             .then((state) => {
-                Console.log(`polled state ${state} for ${id}`);
+                Console.log(`polled door state ${state} for ${id}`);
                 garageDoors[id].stateval.update(state);
                 // are we in fast poll mode?
                 if (garageDoorFastPoll) {
@@ -36,15 +37,61 @@ function pollGarageDoors(restart)
                         }
                     }
                     // we have, return to default
-                    garageDoorInterval = defaultGarageDoorInterval;
+                    garageDoorInterval = defaultPollInterval;
                     garageDoorFastPoll = false;
                 }
             }, (resp) => {
-                Console.error("poll error", id, resp);
+                Console.error("poll door error", id, resp);
             });
     }
     if (restart !== false)
         garageDoorTimer = setTimeout(pollGarageDoors, garageDoorInterval);
+}
+
+function updateLightState(light, state)
+{
+    switch (typeof state) {
+    case "string":
+        var st = parseInt(state);
+        if (!isNaN(state)) {
+            state = state ? 1 : 0;
+        } else {
+            state = (state.toLowerCase() == "on") ? 1 : 0;
+        }
+        break;
+    case "boolean":
+    case "number":
+        state = state ? 1 : 0;
+        break;
+    default:
+        Console.error("invalid state type", typeof state);
+        return;
+    }
+    light.stateval.update(state);
+}
+
+function pollLights()
+{
+    for (let id in lights) {
+        myQ.getLightStatus(Config.userid, Config.password, id)
+            .then((state) => {
+                Console.log(`polled light state ${state} for ${id}`);
+                updateLightState(lights[id], state);
+            }, (resp) => {
+                Console.error("poll light error", id, resp);
+            });
+    }
+}
+
+function getName(dev)
+{
+    for (var i = 0; i < dev.Attributes.length; ++i) {
+        if (dev.Attributes[i].Name == "desc") {
+            if (typeof dev.Attributes[i].Value === "string")
+                return dev.Attributes[i].Value;
+        }
+    }
+    return dev.TypeName + ":" + dev.DeviceId;
 }
 
 const devices = {
@@ -61,7 +108,7 @@ const devices = {
         let uuid = `myq:${dev.DeviceId}`;
         let hwdev = new hw.Device(hw.Type.GarageDoor, uuid);
         if (!hwdev.name)
-            hwdev.name = `Garage Door (${dev.DeviceId})`;
+            hwdev.name = getName(dev);
         let hwmodeval = new hw.Device.Value("mode", { values: { close: 0, open: 1 }, handle: dev });
         hwmodeval._valueUpdated = function(v) {
             const fastPoll = function() {
@@ -109,6 +156,59 @@ const devices = {
         hw.addDevice(hwdev);
 
         garageDoors[dev.DeviceId] = { dev: dev, stateval: hwstateval };
+    },
+    LampModule: function(dev, hw) {
+        var currentState;
+        for (var i = 0; i < dev.Attributes.length; ++i) {
+            if (dev.Attributes[i].Name == "doorstate") {
+                currentState = parseInt(dev.Attributes[i].Value);
+                break;
+            }
+        }
+        // Console.log(currentState);
+        let uuid = `myq:${dev.DeviceId}`;
+        let hwdev = new hw.Device(hw.Type.Light, uuid);
+        if (!hwdev.name)
+            hwdev.name = getName(dev);
+        let hwmodeval = new hw.Device.Value("mode", { values: { off: 0, on: 1 }, handle: dev });
+        hwmodeval._valueUpdated = function(v) {
+            var val;
+            switch (typeof v) {
+            case "number":
+            case "boolean":
+                if (v) {
+                    myQ.enableLight(Config.userid, Config.password, dev.DeviceId);
+                } else {
+                    myQ.disableLight(Config.userid, Config.password, dev.DeviceId);
+                }
+                setTimeout(() => {
+                    myQ.getLightStatus(Config.userid, Config.password, dev.DeviceId)
+                        .then((state) => {
+                            Console.log(`polled light state ${state} for ${dev.DeviceId}`);
+                            updateLightState(lights[dev.DeviceId], state);
+                        }, (resp) => {
+                            Console.error("poll light error", dev.DeviceId, resp);
+                        });
+                }, 100);
+                break;
+            default:
+                Console.error("myQ lamp type error", typeof v);
+                break;
+            }
+        };
+        hwmodeval._valueType = "boolean";
+        hwdev.addValue(hwmodeval);
+
+        let hwstateval = new hw.Device.Value("state", { readOnly: true });
+        hwstateval.update("Unknown");
+        hwstateval._valueType = "string";
+        hwdev.addValue(hwstateval);
+
+        Console.log("created myq", dev.TypeName, hwdev.name);
+
+        hw.addDevice(hwdev);
+
+        lights[dev.DeviceId] = { dev: dev, stateval: hwstateval };
     }
 };
 
@@ -145,14 +245,19 @@ const hwmyq = {
                     }
                 }
 
-                defaultGarageDoorInterval = Config.pollInterval || (1000 * 60 * 10);
-                garageDoorInterval = defaultGarageDoorInterval;
+                defaultPollInterval = Config.pollInterval || (1000 * 60 * 10);
+                garageDoorInterval = defaultPollInterval;
                 garageDoorTimer = setTimeout(pollGarageDoors, garageDoorInterval);
 
-                Console.log("default poll interval", defaultGarageDoorInterval);
+                Console.log("default poll interval", defaultPollInterval);
 
                 // and poll once right now to update our values
                 pollGarageDoors(false);
+
+                // poll lights as well
+                setInterval(pollLights, defaultPollInterval);
+                // and poll now
+                pollLights();
 
                 this._ready = true;
                 this._emit("ready");

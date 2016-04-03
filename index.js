@@ -54,20 +54,20 @@ function updateLightState(light, state)
     case "string":
         var st = parseInt(state);
         if (!isNaN(state)) {
-            state = state ? 1 : 0;
+            state = state ? true : false;
         } else {
-            state = (state.toLowerCase() == "on") ? 1 : 0;
+            state = (state.toLowerCase() == "on") ? true : false;
         }
         break;
     case "boolean":
     case "number":
-        state = state ? 1 : 0;
+        state = state ? true : false;
         break;
     default:
         Console.error("invalid state type", typeof state);
         return;
     }
-    light.stateval.update(state);
+    light.hwval.update(state);
 }
 
 function pollLights()
@@ -170,8 +170,8 @@ const devices = {
         let hwdev = new hw.Device(hw.Type.Light, uuid);
         if (!hwdev.name)
             hwdev.name = getName(dev);
-        let hwmodeval = new hw.Device.Value("mode", { values: { off: 0, on: 1 }, handle: dev });
-        hwmodeval._valueUpdated = function(v) {
+        let hwval = new hw.Device.Value("value", { values: { off: false, on: true }, handle: dev });
+        hwval._valueUpdated = function(v) {
             var val;
             switch (typeof v) {
             case "number":
@@ -196,19 +196,13 @@ const devices = {
                 break;
             }
         };
-        hwmodeval._valueType = "boolean";
-        hwdev.addValue(hwmodeval);
-
-        let hwstateval = new hw.Device.Value("state", { readOnly: true });
-        hwstateval.update("Unknown");
-        hwstateval._valueType = "string";
-        hwdev.addValue(hwstateval);
+        hwdev.addValue(hwval);
 
         Console.log("created myq", dev.TypeName, hwdev.name);
 
         hw.addDevice(hwdev);
 
-        lights[dev.DeviceId] = { dev: dev, stateval: hwstateval };
+        lights[dev.DeviceId] = { dev: dev, hwval: hwval };
     }
 };
 

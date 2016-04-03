@@ -246,18 +246,22 @@ const hwmyq = {
                 }
 
                 defaultPollInterval = Config.pollInterval || (1000 * 60 * 10);
-                garageDoorInterval = defaultPollInterval;
-                garageDoorTimer = setTimeout(pollGarageDoors, garageDoorInterval);
-
                 Console.log("default poll interval", defaultPollInterval);
 
-                // and poll once right now to update our values
-                pollGarageDoors(false);
+                if (Object.keys(garageDoors).length > 0) {
+                    garageDoorInterval = defaultPollInterval;
+                    garageDoorTimer = setTimeout(pollGarageDoors, garageDoorInterval);
 
-                // poll lights as well
-                setInterval(pollLights, defaultPollInterval);
-                // and poll now
-                pollLights();
+                    // and poll once right now to update our values
+                    pollGarageDoors(false);
+                }
+
+                if (Object.keys(lights).length > 0) {
+                    // poll lights as well
+                    setInterval(pollLights, defaultPollInterval);
+                    // and poll now
+                    pollLights();
+                }
 
                 this._ready = true;
                 this._emit("ready");

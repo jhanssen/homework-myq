@@ -48,35 +48,13 @@ function pollGarageDoors(restart)
         garageDoorTimer = setTimeout(pollGarageDoors, garageDoorInterval);
 }
 
-function updateLightState(light, state)
-{
-    switch (typeof state) {
-    case "string":
-        var st = parseInt(state);
-        if (!isNaN(state)) {
-            state = state ? true : false;
-        } else {
-            state = (state.toLowerCase() == "on") ? true : false;
-        }
-        break;
-    case "boolean":
-    case "number":
-        state = state ? true : false;
-        break;
-    default:
-        Console.error("invalid state type", typeof state);
-        return;
-    }
-    light.hwval.update(state);
-}
-
 function pollLights()
 {
     for (let id in lights) {
         myQ.getLightStatus(Config.userid, Config.password, id)
             .then((state) => {
                 Console.log(`polled light state ${state} for ${id}`);
-                updateLightState(lights[id], state);
+                lights[id].hwval.update(state);
             }, (resp) => {
                 Console.error("poll light error", id, resp);
             });
@@ -177,19 +155,24 @@ const devices = {
             case "number":
             case "boolean":
                 if (v) {
-                    myQ.enableLight(Config.userid, Config.password, dev.DeviceId);
-                } else {
-                    myQ.disableLight(Config.userid, Config.password, dev.DeviceId);
-                }
-                setTimeout(() => {
-                    myQ.getLightStatus(Config.userid, Config.password, dev.DeviceId)
-                        .then((state) => {
-                            Console.log(`polled light state ${state} for ${dev.DeviceId}`);
-                            updateLightState(lights[dev.DeviceId], state);
-                        }, (resp) => {
-                            Console.error("poll light error", dev.DeviceId, resp);
+                    myQ.enableLight(Config.userid, Config.password, dev.DeviceId)
+                        .then((returnCode) => {
+                            if (returnCode == "0") {
+                                lights[dev.DeviceId].hwval.update(true);
+                            } else {
+                                Console.log(`invalid return code ${returnCode} for enable ${dev.DeviceId}`);
+                            }
                         });
-                }, 100);
+                } else {
+                    myQ.disableLight(Config.userid, Config.password, dev.DeviceId)
+                        .then((returnCode) => {
+                            if (returnCode == "0") {
+                                lights[dev.DeviceId].hwval.update(false);
+                            } else {
+                                Console.log(`invalid return code ${returnCode} for enable ${dev.DeviceId}`);
+                            }
+                        });
+                }
                 break;
             default:
                 Console.error("myQ lamp type error", typeof v);
@@ -252,7 +235,7 @@ const hwmyq = {
 
                 if (Object.keys(lights).length > 0) {
                     // poll lights as well
-                    setInterval(pollLights, defaultPollInterval);
+                    // setInterval(pollLights, defaultPollInterval);
                     // and poll now
                     pollLights();
                 }

@@ -13,6 +13,7 @@ var defaultPollInterval = undefined;
 var garageDoorInterval = undefined;
 var garageDoorTimer = undefined;
 var garageDoorFastPoll = false;
+var lightPendingPoll = undefined;
 
 function pollGarageDoors(restart)
 {
@@ -50,10 +51,18 @@ function pollGarageDoors(restart)
 
 function pollLights()
 {
+    if (lightPendingPoll !== undefined)
+        lightPendingPoll = undefined;
     for (let id in lights) {
         myQ.getLightStatus(Config.userid, Config.password, id)
             .then((state) => {
                 Console.log(`polled light state ${state} for ${id}`);
+                if (state != lights[id].hwval.raw) {
+                    // we're about to do a real update, schedule a new poll to see if our state has stabilized
+                    if (lightPendingPoll !== undefined)
+                        clearTimeout(lightPendingPoll);
+                    lightPendingPoll = setTimeout(pollLights, 5000);
+                }
                 lights[id].hwval.update(state);
             }, (resp) => {
                 Console.error("poll light error", id, resp);
@@ -235,7 +244,7 @@ const hwmyq = {
 
                 if (Object.keys(lights).length > 0) {
                     // poll lights as well
-                    // setInterval(pollLights, defaultPollInterval);
+                    setInterval(pollLights, defaultPollInterval);
                     // and poll now
                     pollLights();
                 }

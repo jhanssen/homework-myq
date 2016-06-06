@@ -93,7 +93,7 @@ const devices = {
         }
         // Console.log(currentState);
         let uuid = `myq:${dev.DeviceId}`;
-        let hwdev = new hw.Device(hw.Type.GarageDoor, uuid);
+        let hwdev = new hw.Device("GarageDoor", uuid);
         if (!hwdev.name)
             hwdev.name = getName(dev);
         let hwmodeval = new hw.Device.Value("mode", { values: { close: 0, open: 1 }, handle: dev });
@@ -154,7 +154,7 @@ const devices = {
         }
         // Console.log(currentState);
         let uuid = `myq:${dev.DeviceId}`;
-        let hwdev = new hw.Device(hw.Type.Light, uuid);
+        let hwdev = new hw.Device("Light", uuid);
         if (!hwdev.name)
             hwdev.name = getName(dev);
         let hwval = new hw.Device.Value("value", { values: { off: false, on: true }, handle: dev });

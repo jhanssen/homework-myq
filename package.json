@@ -1,6 +1,6 @@
 {
   "name": "hw-myq",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "engines": {
     "hw-server": ">=1.0.0",
     "node": ">4.0.0"

@@ -93,7 +93,7 @@ const devices = {
         }
         // Console.log(currentState);
         let uuid = `myq:${dev.DeviceId}`;
-        let hwdev = new hw.Device("GarageDoor", uuid);
+        let hwdev = new hw.Device("GarageDoor", { uuid: uuid });
         if (!hwdev.name)
             hwdev.name = getName(dev);
         let hwmodeval = new hw.Device.Value("mode", { values: { close: 0, open: 1 }, handle: dev });
@@ -154,7 +154,7 @@ const devices = {
         }
         // Console.log(currentState);
         let uuid = `myq:${dev.DeviceId}`;
-        let hwdev = new hw.Device("Light", uuid);
+        let hwdev = new hw.Device("Light", { uuid: uuid });
         if (!hwdev.name)
             hwdev.name = getName(dev);
         let hwval = new hw.Device.Value("value", { values: { off: false, on: true }, handle: dev });
@@ -198,6 +198,34 @@ const devices = {
     }
 };
 
+function registerDevices(homework)
+{
+    var garageDoorSchema = new homework.Device.Schema({
+        mode: {
+            values: {
+                close: 0,
+                open: 1
+            },
+            readOnly: false
+        },
+        state: {
+            readOnly: true
+        }
+    });
+    homework.registerDevice("GarageDoor", garageDoorSchema);
+
+    var lightSchema = new homework.Device.Schema({
+        value: {
+            values: {
+                off: false,
+                on: true
+            },
+            readOnly: false
+        }
+    });
+    homework.registerDevice("Light", lightSchema);
+}
+
 const hwmyq = {
     get name() { return "myq"; },
     get homework() { return this._homework; },
@@ -213,6 +241,8 @@ const hwmyq = {
         this._homework = homework;
         Config = cfg;
         Console = homework.Console;
+
+        registerDevices(homework);
 
         myQ.getDevices(cfg.userid, cfg.password)
             .then((resp) => {

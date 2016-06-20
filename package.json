@@ -2,7 +2,7 @@
   "name": "hw-myq",
   "version": "1.0.12",
   "engines": {
-    "hw-server": ">=1.0.0",
+    "hw-server": ">=1.0.22",
     "node": ">4.0.0"
   },
   "repository": {

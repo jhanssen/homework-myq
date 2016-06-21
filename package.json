@@ -13,6 +13,9 @@
   "keywords": [
     "homework-plugin"
   ],
+  "software.homework": {
+    "moduleProtocol": 1
+  },
   "dependencies": {
     "@jhanssen/myqnode": "~0.0.6"
   }
